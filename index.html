@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light}body{margin:0}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=DM+Sans:wght@400;500;700&display=swap">
+<title>Maratona Disney</title>
+<style>
+/* Layout: coluna de sorteio (ingresso dourado) ao lado da lista de filmes com check; empilha no celular */
+:root {
+  --bg: #EEF1F7;
+  --surface: #FFFFFF;
+  --ink: #131C3A;
+  --muted: #5B6486;
+  --line: #D5DBEA;
+  --accent: #2C46D6;
+  --accent-ink: #FFFFFF;
+  --ticket: #FFC531;
+  --ticket-ink: #1A1F3D;
+  --font-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1226;
+    --surface: #171C38;
+    --ink: #EEF1FF;
+    --muted: #9AA3C8;
+    --line: #2A3159;
+    --accent: #7C93FF;
+    --accent-ink: #0E1226;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1226;
+  --surface: #171C38;
+  --ink: #EEF1FF;
+  --muted: #9AA3C8;
+  --line: #2A3159;
+  --accent: #7C93FF;
+  --accent-ink: #0E1226;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1080px; margin-inline: auto; display: flex; flex-direction: column; gap: 28px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; flex-direction: column; gap: 14px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 9vw, 4.6rem);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 0;
+  text-wrap: balance;
+}
+.progress { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.progress-text { font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.progress-text b { color: var(--ink); font-size: 1.1rem; }
+.bar { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .3s ease; }
+
+.save-note { font-size: 0.82rem; color: var(--muted); min-height: 1.2em; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (min-width: 860px) {
+  .layout { grid-template-columns: 360px minmax(0, 1fr); gap: 40px; }
+  .draw { position: sticky; top: 24px; }
+}
+
+/* Sorteio */
+.draw { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; cursor: pointer; }
+.toggle input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+
+.ticket {
+  background: var(--ticket);
+  color: var(--ticket-ink);
+  padding: 22px 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  -webkit-mask:
+    radial-gradient(circle 13px at 0 62%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 13px at 100% 62%, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 13px at 0 62%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 13px at 100% 62%, #0000 97%, #000) right / 51% 100% no-repeat;
+  border-radius: 6px;
+}
+.ticket-top { display: flex; flex-direction: column; gap: 8px; min-height: 9.5rem; }
+.ticket-kicker { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.ticket-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 8vw, 3rem);
+  line-height: 0.98;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.ticket.rolling .ticket-title { opacity: 0.55; }
+.ticket-meta { font-size: 0.95rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ticket-perf { border-top: 2px dashed rgba(26, 31, 61, 0.45); padding-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  border: 2px solid var(--ticket-ink);
+  background: transparent;
+  color: var(--ticket-ink);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn.solid { background: var(--ticket-ink); color: var(--ticket); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn svg { width: 18px; height: 18px; }
+.ticket .btn:focus-visible { outline-color: var(--ticket-ink); }
+.draw-go {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.draw-go:disabled { opacity: 0.6; cursor: default; }
+
+/* Lista */
+.list { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search {
+  flex: 1 1 220px;
+  min-width: 0;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+}
+.search::placeholder { color: var(--muted); }
+section.group { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; margin-bottom: 4px; }
+.group-head h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.group-count { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rows { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) and (max-width: 859px), (min-width: 1100px) { .rows { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; } }
+.row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 4px;
+  min-width: 0;
+}
+.row:hover { background: var(--surface); }
+.box {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid var(--muted);
+  display: grid;
+  place-items: center;
+  color: transparent;
+  transition: background .15s, border-color .15s;
+}
+.box svg { width: 18px; height: 18px; }
+.row[aria-checked="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row-title { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.row[aria-checked="true"] .row-title { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.row-year { flex: none; color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); padding: 12px 0; }
+.foot { color: var(--muted); font-size: 0.85rem; max-width: 62ch; }
+@media (prefers-reduced-motion: reduce) { .bar > i, .box { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Maratona Disney</h1>
+    <div class="progress">
+      <div class="progress-text" id="progressText"></div>
+      <div class="bar" aria-hidden="true"><i id="progressBar"></i></div>
+      <div class="save-note" id="saveNote"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="draw" aria-label="Sorteador de filmes">
+      <div class="label">Sortear entre</div>
+      <div class="chips" id="drawChips"></div>
+      <label class="toggle" for="onlyUnseen"><input type="checkbox" id="onlyUnseen" checked> Só os que ainda não vi</label>
+
+      <div class="ticket" id="ticket">
+        <div class="ticket-top">
+          <div class="ticket-kicker" id="ticketKicker">Hoje no cinema lá de casa</div>
+          <h2 class="ticket-title" id="ticketTitle">Aperte sortear</h2>
+          <div class="ticket-meta" id="ticketMeta"></div>
+        </div>
+        <div class="ticket-perf">
+          <button class="btn solid" id="ticketMark" type="button" hidden></button>
+        </div>
+      </div>
+
+      <button class="draw-go" id="drawGo" type="button">Sortear filme</button>
+    </aside>
+
+    <main class="list">
+      <div class="tools">
+        <input class="search" id="search" type="search" placeholder="Buscar filme ou ano" aria-label="Buscar filme ou ano">
+        <div class="chips" id="statusChips"></div>
+      </div>
+      <div id="groups"></div>
+      <p class="foot">Inclui os longas da Walt Disney Animation Studios, da Pixar e os live-actions da Disney lançados até hoje. Suas marcações são salvas automaticamente.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STUDIOS = {
+    animation: { nome: "Walt Disney Animation", filmes: [
+      ["Branca de Neve e os Sete Anões", 1937], ["Pinóquio", 1940], ["Fantasia", 1940], ["Dumbo", 1941], ["Bambi", 1942],
+      ["Alô, Amigos", 1943], ["Você Já Foi à Bahia?", 1945], ["Música, Maestro!", 1946], ["Fun and Fancy Free", 1947],
+      ["Melody Time", 1948], ["The Adventures of Ichabod and Mr. Toad", 1949], ["Cinderela", 1950],
+      ["Alice no País das Maravilhas", 1951], ["Peter Pan", 1953], ["A Dama e o Vagabundo", 1955],
+      ["A Bela Adormecida", 1959], ["101 Dálmatas", 1961], ["A Espada Era a Lei", 1963], ["Mogli: O Menino Lobo", 1967],
+      ["Aristogatas", 1970], ["Robin Hood", 1973], ["As Aventuras de Winnie the Pooh", 1977], ["Bernardo e Bianca", 1977],
+      ["O Cão e a Raposa", 1981], ["O Caldeirão Mágico", 1985], ["As Aventuras do Ratinho Detetive", 1986],
+      ["Oliver e sua Turma", 1988], ["A Pequena Sereia", 1989], ["Bernardo e Bianca na Terra dos Cangurus", 1990],
+      ["A Bela e a Fera", 1991], ["Aladdin", 1992], ["O Rei Leão", 1994], ["Pocahontas", 1995],
+      ["O Corcunda de Notre Dame", 1996], ["Hércules", 1997], ["Mulan", 1998], ["Tarzan", 1999], ["Fantasia 2000", 1999],
+      ["Dinossauro", 2000], ["A Nova Onda do Imperador", 2000], ["Atlantis: O Reino Perdido", 2001],
+      ["Lilo & Stitch", 2002], ["Planeta do Tesouro", 2002], ["Irmão Urso", 2003], ["Home on the Range", 2004],
+      ["A Galinha Chicken Little", 2005], ["Meet the Robinsons", 2007], ["Bolt: Supercão", 2008],
+      ["A Princesa e o Sapo", 2009], ["Enrolados", 2010], ["Ursinho Pooh", 2011], ["Detona Ralph", 2012],
+      ["Frozen: Uma Aventura Congelante", 2013], ["Operação Big Hero", 2014], ["Zootopia: Essa Cidade É o Bicho", 2016],
+      ["Moana: Um Mar de Aventuras", 2016], ["Ralph Quebra a Internet", 2018], ["Frozen 2", 2019],
+      ["Raya e o Último Dragão", 2021], ["Encanto", 2021], ["Mundo Estranho", 2022], ["Wish: O Poder dos Desejos", 2023],
+      ["Moana 2", 2024], ["Zootopia 2", 2025]
+    ]},
+    pixar: { nome: "Pixar", filmes: [
+      ["Toy Story", 1995], ["Vida de Inseto", 1998], ["Toy Story 2", 1999], ["Monstros S.A.", 2001],
+      ["Procurando Nemo", 2003], ["Os Incríveis", 2004], ["Carros", 2006], ["Ratatouille", 2007], ["WALL-E", 2008],
+      ["Up: Altas Aventuras", 2009], ["Toy Story 3", 2010], ["Carros 2", 2011], ["Valente", 2012],
+      ["Universidade Monstros", 2013], ["Divertida Mente", 2015], ["O Bom Dinossauro", 2015], ["Procurando Dory", 2016],
+      ["Carros 3", 2017], ["Viva: A Vida é uma Festa", 2017], ["Os Incríveis 2", 2018], ["Toy Story 4", 2019],
+      ["Dois Irmãos: Uma Jornada Fantástica", 2020], ["Soul", 2020], ["Luca", 2021], ["Red: Crescer É uma Fera", 2022],
+      ["Lightyear", 2022], ["Elemental", 2023], ["Divertida Mente 2", 2024], ["Elio", 2025], ["Hoppers", 2026],
+      ["Toy Story 5", 2026]
+    ]},
+    live: { nome: "Live-action", filmes: [
+      ["101 Dálmatas: O Filme", 1996], ["102 Dálmatas", 2000], ["O Aprendiz de Feiticeiro", 2010],
+      ["Alice no País das Maravilhas", 2010], ["Malévola", 2014], ["Cinderela", 2015], ["Alice Através do Espelho", 2016],
+      ["Mogli: O Menino Lobo", 2016], ["A Bela e a Fera", 2017], ["Christopher Robin", 2018], ["Dumbo", 2019],
+      ["Aladdin", 2019], ["O Rei Leão", 2019], ["Malévola: Dona do Mal", 2019], ["Mulan", 2020], ["Cruella", 2021],
+      ["A Pequena Sereia", 2023], ["Branca de Neve", 2025], ["Lilo & Stitch", 2025], ["Moana", 2026]
+    ]}
+  };
+  var KEYS = Object.keys(STUDIOS);
+  var ALL = [];
+  KEYS.forEach(function (k) {
+    STUDIOS[k].filmes.forEach(function (f, i) { ALL.push({ id: k + "-" + i, s: k, t: f[0], y: f[1] }); });
+  });
+  var BY_ID = {};
+  ALL.forEach(function (m) { BY_ID[m.id] = m; });
+
+  var STORE = "maratona-disney-vistos";
+  function load() {
+    try { return new Set(JSON.parse(localStorage.getItem(STORE) || "[]")); } catch (e) { return new Set(); }
+  }
+  var dbDoc = null, touched = false, writing = false, pending = false;
+  var CLOUD_OK = "Salvo na sua conta. Aparece em qualquer aparelho onde você abrir esta página.";
+  function setNote(t) { var n = document.getElementById("saveNote"); if (n) n.textContent = t; }
+  function saveLocal() {
+    try { localStorage.setItem(STORE, JSON.stringify(Array.from(seen))); } catch (e) {}
+  }
+  function save() { saveLocal(); saveCloud(); }
+  function saveCloud() {
+    if (!dbDoc) return;
+    pending = true;
+    if (writing) return;
+    writing = true;
+    (async function () {
+      var ok = true;
+      while (pending) {
+        pending = false;
+        try { await dbDoc.set({ ids: Array.from(seen) }); } catch (e) { ok = false; }
+      }
+      writing = false;
+      setNote(ok ? CLOUD_OK : "Não consegui salvar na conta agora. Suas marcações ficaram só neste navegador.");
+    })();
+  }
+  async function initCloud() {
+    setNote("Salvo neste navegador.");
+    try {
+      if (!window.claude || !window.claude.use) return;
+      var db = await window.claude.use("db");
+      var user = await window.claude.use("user");
+      if (!db || !user) return;
+      var uid = await user.id();
+      if (!uid) return;
+      var doc = db.collection("data/users/" + uid).doc("vistos");
+      var snap = await doc.get();
+      if (snap.exists && !touched) {
+        var d = snap.data() || {};
+        var ids = Array.isArray(d.ids) ? d.ids : [];
+        seen = new Set(ids.filter(function (x) { return BY_ID[x]; }));
+        saveLocal();
+        renderProgress();
+        renderList();
+        renderTicket();
+      } else {
+        await doc.set({ ids: Array.from(seen) });
+      }
+      dbDoc = doc;
+      setNote(CLOUD_OK);
+    } catch (e) {
+      setNote("Não consegui salvar na conta. Suas marcações ficam só neste navegador.");
+    }
+  }
+  var seen = load();
+  var drawStudios = new Set(KEYS);
+  var status = "todos";
+  var query = "";
+  var current = null;
+  var rolling = false;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function norm(s) { return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+
+  function renderProgress() {
+    var n = 0;
+    ALL.forEach(function (m) { if (seen.has(m.id)) n++; });
+    $("progressText").innerHTML = "<b>" + n + "</b> de " + ALL.length + " filmes assistidos";
+    $("progressBar").style.width = (n / ALL.length * 100) + "%";
+  }
+
+  function renderList() {
+    var q = norm(query.trim());
+    var html = "";
+    KEYS.forEach(function (k) {
+      var all = ALL.filter(function (m) { return m.s === k; });
+      var done = all.filter(function (m) { return seen.has(m.id); }).length;
+      var items = all.filter(function (m) {
+        if (status === "faltam" && seen.has(m.id)) return false;
+        if (status === "vistos" && !seen.has(m.id)) return false;
+        if (q && norm(m.t + " " + m.y).indexOf(q) === -1) return false;
+        return true;
+      });
+      if (!items.length) return;
+      html += '<section class="group"><div class="group-head"><h2>' + esc(STUDIOS[k].nome) + '</h2><span class="group-count">' + done + " / " + all.length + '</span></div><ul class="rows">';
+      items.forEach(function (m) {
+        var on = seen.has(m.id);
+        html += '<li><button type="button" class="row" role="checkbox" aria-checked="' + on + '" data-id="' + m.id + '">' +
+          '<span class="box">' + CHECK + '</span><span class="row-title">' + esc(m.t) + '</span><span class="row-year">' + m.y + "</span></button></li>";
+      });
+      html += "</ul></section>";
+    });
+    $("groups").innerHTML = html || '<p class="empty">Nenhum filme encontrado com esse filtro.</p>';
+  }
+
+  function renderChips() {
+    var h = "";
+    KEYS.forEach(function (k) {
+      h += '<button type="button" class="chip" data-studio="' + k + '" aria-pressed="' + drawStudios.has(k) + '">' + esc(STUDIOS[k].nome) + "</button>";
+    });
+    $("drawChips").innerHTML = h;
+    var opts = [["todos", "Todos"], ["faltam", "Faltam"], ["vistos", "Vistos"]];
+    $("statusChips").innerHTML = opts.map(function (o) {
+      return '<button type="button" class="chip" data-status="' + o[0] + '" aria-pressed="' + (status === o[0]) + '">' + o[1] + "</button>";
+    }).join("");
+  }
+
+  function renderTicket() {
+    var mark = $("ticketMark");
+    if (!current) { mark.hidden = true; return; }
+    var m = BY_ID[current];
+    $("ticketTitle").textContent = m.t;
+    $("ticketMeta").textContent = m.y + " · " + STUDIOS[m.s].nome;
+    var on = seen.has(m.id);
+    mark.hidden = false;
+    mark.innerHTML = CHECK + (on ? "Já vi (desmarcar)" : "Marcar como visto");
+    $("ticketKicker").textContent = on ? "Você já assistiu" : "Hoje no cinema lá de casa";
+  }
+
+  function pool() {
+    var only = $("onlyUnseen").checked;
+    return ALL.filter(function (m) { return drawStudios.has(m.s) && (!only || !seen.has(m.id)); });
+  }
+
+  function pick(p) {
+    var m;
+    do { m = p[Math.floor(Math.random() * p.length)]; } while (p.length > 1 && m.id === current);
+    return m;
+  }
+
+  function showEmpty() {
+    current = null;
+    $("ticketKicker").textContent = "Sessão encerrada";
+    $("ticketTitle").textContent = "Nada para sortear";
+    $("ticketMeta").textContent = "Você já viu todos desse grupo. Desmarque a opção acima para sortear entre todos.";
+    $("ticketMark").hidden = true;
+  }
+
+  function draw(instant) {
+    if (rolling) return;
+    var p = pool();
+    if (!p.length) { showEmpty(); return; }
+    var final = pick(p);
+    if (instant || reduce) { current = final.id; renderTicket(); return; }
+    rolling = true;
+    $("drawGo").disabled = true;
+    $("ticket").classList.add("rolling");
+    $("ticketKicker").textContent = "Sorteando...";
+    $("ticketMeta").textContent = "";
+    $("ticketMark").hidden = true;
+    var n = 0;
+    var t = setInterval(function () {
+      n++;
+      if (n < 15) {
+        $("ticketTitle").textContent = p[Math.floor(Math.random() * p.length)].t;
+      } else {
+        clearInterval(t);
+        rolling = false;
+        $("drawGo").disabled = false;
+        $("ticket").classList.remove("rolling");
+        current = final.id;
+        renderTicket();
+      }
+    }, 85);
+  }
+
+  function toggleSeen(id) {
+    touched = true;
+    if (seen.has(id)) seen.delete(id); else seen.add(id);
+    save();
+    renderProgress();
+    renderList();
+    if (current === id) renderTicket();
+  }
+
+  $("groups").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-id]");
+    if (b) toggleSeen(b.getAttribute("data-id"));
+  });
+  $("ticketMark").addEventListener("click", function () { if (current) toggleSeen(current); });
+  $("drawGo").addEventListener("click", function () { draw(false); });
+  $("onlyUnseen").addEventListener("change", function () { draw(true); });
+  $("drawChips").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-studio]");
+    if (!b) return;
+    var k = b.getAttribute("data-studio");
+    if (drawStudios.has(k)) { if (drawStudios.size > 1) drawStudios.delete(k); } else drawStudios.add(k);
+    renderChips();
+  });
+  $("statusChips").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-status]");
+    if (!b) return;
+    status = b.getAttribute("data-status");
+    renderChips();
+    renderList();
+  });
+  $("search").addEventListener("input", function (e) { query = e.target.value; renderList(); });
+
+  renderChips();
+  renderProgress();
+  renderList();
+  draw(true);
+  initCloud();
+})();
+</script>
+
+</body>
+</html>
